@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PRESITEN · simulador de browser</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px 16px; background: #0b0b0d; color: #f1f1f6;
+         font: 14px/1.6 -apple-system, "Segoe UI", Roboto, Inter, sans-serif; }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+  h1 span { color: #8f8fa3; font-weight: 500; font-size: 15px; }
+  .muted { color: #8f8fa3; font-size: 13px; }
+  .card { margin-top: 18px; padding: 16px; background: #141416; border: 1px solid #232328; border-radius: 14px; }
+  .row { display: flex; gap: 10px; margin-top: 10px; }
+  input[type=password], input[type=text] { flex: 1; padding: 10px 12px; background: #0b0b0d; color: #f1f1f6;
+    border: 1px solid #2a2a30; border-radius: 10px; font-size: 13px; }
+  button { padding: 10px 18px; border: 0; border-radius: 10px; background: #f1f1f6; color: #101013;
+    font-weight: 700; font-size: 13px; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  #out { margin-top: 16px; font: 12px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace;
+    white-space: pre-wrap; overflow-wrap: anywhere; max-height: 60vh; overflow: auto;
+    background: #0b0b0d; border: 1px solid #232328; border-radius: 12px; padding: 14px; }
+  .verdict { display: inline-block; margin-top: 10px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .verdict.ok { background: #12331f; color: #7fe0a5; }
+  .verdict.bad { background: #3a1414; color: #ff9f9f; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #1e1e23; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>PRESITEN <span>· simulador de browser p/ manter a AKIRA UI acordada (Render FREE)</span></h1>
+    <p class="muted" id="target">alvo: —</p>
+
+    <div class="card">
+      <div class="row">
+        <input id="token" type="password" placeholder="token (SIM_TOKEN) — gravado só neste browser" />
+        <button id="run">Correr simulação</button>
+      </div>
+      <label style="display:flex;gap:6px;align-items:center;margin-top:10px" class="muted">
+        <input type="checkbox" id="force" /> forçar chat (ignora janelas SIM_CHAT_HOURS)
+      </label>
+      <div id="summary"></div>
+      <div id="out" hidden></div>
+    </div>
+
+    <p class="muted">Endpoints: <code>GET/POST /api/simulate</code> · <code>GET /api/status</code> — agendamento principal no GitHub Actions (<code>*/10</code>); cron da Vercel serve de fallback.</p>
+  </div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const tokenInput = $("#token");
+tokenInput.value = localStorage.getItem("presistent_token") || "";
+tokenInput.addEventListener("change", () => localStorage.setItem("presistent_token", tokenInput.value));
+
+fetch("/api/status").then(r => r.json()).then(s => {
+  $("#target").textContent = "alvo: " + s.target + (s.auth === "requerida" ? " · auth requerida" : " · aberta");
+}).catch(() => {});
+
+$("#run").addEventListener("click", async () => {
+  const btn = $("#run");
+  btn.disabled = true; btn.textContent = "a correr…";
+  $("#summary").innerHTML = ""; $("#out").hidden = true; $("#out").textContent = "";
+  try {
+    const t = tokenInput.value.trim();
+    const force = $("#force").checked ? "&force_chat=1" : "";
+    const res = await fetch("/api/simulate?token=" + encodeURIComponent(t) + force, { method: "POST" });
+    const r = await res.json();
+    if (!res.ok) { $("#summary").innerHTML = "<span class='verdict bad'>" + (r.error || res.status) + "</span>"; }
+    else {
+      const cls = r.verdict === "warm_ok" ? "ok" : "bad";
+      const chatTxt = r.chat && r.chat.attempted
+        ? ` · chat ${r.chat.status} · markdown ${r.chat.markdownDetected ? "presente" : "ausente"}`
+        : (r.chat && r.chat.enabled === false ? " · chat desativado em serverless (default)" : "");
+      $("#summary").innerHTML = `
+        <span class="verdict ${cls}">${r.verdict}</span>
+        <span class="muted"> okRate ${Math.round(r.okRate * 100)}% · coldStart ${r.coldStart ? "sim" : "não"} · ${Math.round(r.tookMs)}ms${chatTxt}</span>
+        <table><tr><th>rota</th><th>status</th><th class="n">ms</th></tr>
+        ${(r.steps || []).map(s => `<tr><td>${s.path}</td><td>${s.status}${s.ok ? "" : " ✕"}</td><td class="n">${s.ms}</td></tr>`).join("")}
+        </table>`;
+      $("#out").hidden = false;
+      $("#out").textContent = JSON.stringify(r, null, 2);
+    }
+  } catch (e) { $("#summary").innerHTML = "<span class='verdict bad'>falha de rede: " + e.message + "</span>"; }
+  btn.disabled = false; btn.textContent = "Correr simulação";
+});
+</script>
+</body>
+</html>

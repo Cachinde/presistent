@@ -1,0 +1,10 @@
+node_modules
+.git
+.github
+.vercel
+sim/state
+.env
+*.log
+Dockerfile
+docker-compose.yml
+README.md

@@ -1,10 +1,23 @@
 {
-  "name": "presiten-simulator",
-  "version": "0.1.0",
+  "name": "presistent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simulador de browser para manter a AKIRA UI (Render FREE) sem adormecer",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "simulate": "node browserSimulator.js",
-    "build": "echo Building..."
+    "sim": "node sim/run.mjs",
+    "sim:chat": "node sim/run.mjs --chat",
+    "browser": "node browserSimulator.mjs",
+    "loop": "node sim/loop.mjs",
+    "build:docker": "docker build -t presistent .",
+    "start:docker": "docker compose up -d"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^153.0.0",
+    "playwright-core": "^1.64.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0"

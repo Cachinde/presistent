@@ -1,0 +1,14 @@
+services:
+  presistent:
+    build: .
+    image: presistent
+    container_name: presistent
+    restart: unless-stopped
+    environment:
+      TARGET_URL: https://akira-ia.onrender.com
+      SIM_INTERVAL_SECONDS: "180"
+      SIM_BROWSER: "0"
+      SIM_ENABLE_CHAT: "true"
+      SIM_CHAT_HOURS: "9,15,21"
+    volumes:
+      - ./sim/state:/app/sim/state

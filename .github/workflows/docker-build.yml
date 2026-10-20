@@ -1,0 +1,20 @@
+name: docker-build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Dockerfile"
+      - "docker-entry.sh"
+      - "sim/**"
+      - "package.json"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem
+        run: docker build -t presistent:ci .

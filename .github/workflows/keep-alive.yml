@@ -1,0 +1,52 @@
+name: keep-alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: presistent-keep-alive
+  cancel-in-progress: false
+
+env:
+  TARGET_URL: ${{ secrets.TARGET_URL }}
+  VERCEL_SIM_URL: ${{ secrets.VERCEL_SIM_URL }}
+  VERCEL_SIM_TOKEN: ${{ secrets.VERCEL_SIM_TOKEN }}
+  SIM_CHAT_HOURS: ${{ secrets.SIM_CHAT_HOURS }}
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Estado da sessão (cookie jar) via cache
+        uses: actions/cache@v4
+        with:
+          path: sim/state
+          key: presistent-session-${{ github.run_id }}
+          restore-keys: |
+            presistent-session-
+
+      - name: Ronda de navegação real (HTTP core)
+        run: |
+          node sim/run.mjs --json > sim-report.json || true
+          node -e "const r=require('./sim-report.json');console.log('verdict:',r.verdict,'| okRate:',r.okRate,'| coldStart:',r.coldStart,'| chat:',r.chat.status)"
+          node -e "const r=require('./sim-report.json');if(r.verdict==='failed'){process.exit(1)}"
+
+      - name: Disparar a cópia na Vercel (opcional)
+        if: ${{ env.VERCEL_SIM_URL != '' }}
+        run: |
+          STATUS_CODE=$(curl -sS --max-time 120 -o vercel-report.json -w '%{http_code}' \
+            -X POST -H "x-presistent-token: ${VERCEL_SIM_TOKEN}" "$VERCEL_SIM_URL/api/simulate")
+          echo "Vercel /api/simulate → HTTP $STATUS_CODE"
+          node -e "try{const r=require('./vercel-report.json');console.log('verdict:',r.verdict)}catch{}"

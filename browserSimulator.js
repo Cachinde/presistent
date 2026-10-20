@@ -1,8 +1,8 @@
-import { chromium } from 'playwright';
+#!/usr/bin/env node
+// Wrapper de compatibilidade (nome original do repo). Façade para sim/browser.mjs
+import { runBrowserSimulation } from "./sim/browser.mjs";
 
-(async () => {
-  const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.goto('https://akira-ia.onrender.com/');
-  console.log('Page loaded');
-})();
+const args = process.argv.slice(2);
+const report = await runBrowserSimulation({ forceChat: !args.includes("--no-chat") });
+console.log(JSON.stringify(report, null, 2));
+process.exitCode = report.browserOk ? 0 : 1;
