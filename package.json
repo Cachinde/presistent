@@ -1,0 +1,12 @@
+{
+  "name": "presiten-simulator",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "simulate": "node browserSimulator.js",
+    "build": "echo Building..."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}
