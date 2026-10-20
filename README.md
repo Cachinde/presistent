@@ -51,9 +51,9 @@ O PRESITEN **navega como um browser de verdade** e valida tudo:
            api/status.mjs    +  painel manual public/index.html em "/"
 
    (c) Docker / loop local
-       Dockerfile (CMD: node sim/loop.mjs) + docker-compose.yml
-       rondas contínuas com intervalo SIM_INTERVAL_SECONDS (default 180 s)
-       estado: sim/state/session.json (volume)
+        docker/Dockerfile (CMD via docker-entry.sh) + docker-compose.yml
+        rondas contínuas com intervalo SIM_INTERVAL_SECONDS (default 180 s)
+        estado: sim/state/session.json (volume)
 ```
 
 | Modo | Onde corre | Agendamento | Estado da sessão | Papel |
@@ -186,7 +186,7 @@ Nota de fiabilidade: crons do GitHub Actions podem atrasar alguns minutos em pic
 ## 8. Deploy via Docker
 
 ```sh
-docker build -t presiten .
+docker build -f docker/Dockerfile -t presiten .
 
 docker run -d --name presiten --restart unless-stopped \
   -e TARGET_URL="https://akira-ia.onrender.com" \
@@ -203,7 +203,9 @@ Ou com o `docker-compose.yml` incluído (já monta `sim/state` como volume):
 docker compose up -d
 ```
 
-- `Dockerfile`: base `mcr.microsoft.com/playwright:v1.47.0-focal` (browsers Chromium pré-instalados), **`CMD` = `docker-entry.sh`** — por omissão corrido o core HTTP (`node sim/run.mjs --json`); com `SIM_BROWSER=1` corrido o **modo Chromium real** (`node sim/browser.mjs`) aproveitando os browsers da imagem.
+- `docker/Dockerfile`: base `mcr.microsoft.com/playwright:v1.47.0-focal` (browsers Chromium pré-instalados), **`CMD` = `docker-entry.sh`** — por omissão corrido o core HTTP (`node sim/run.mjs --json`); com `SIM_BROWSER=1` corrido o **modo Chromium real** (`node sim/browser.mjs`) aproveitando os browsers da imagem.
+
+> **Nota Vercel:** o Dockerfile vive em `docker/` (e não na raiz) para a Vercel **não** detetar o projeto como "Container Deploy" (que devolveria `500 could not connect to $PORT`). Na Vercel a entrega é `public/` + `api/*.mjs` (configurado no `vercel.json` como `framework: null, outputDirectory: public`).
 - Modo loop: dorme `SIM_INTERVAL_SECONDS` (default **180** s) entre rondas; cada ronda emite o relatório completo no stdout (visível em `docker logs -f presiten`).
 - Persistir `/app/sim/state` num volume mantém a sessão/cookies entre restarts e evita criar um utilizador novo na DB a cada boot do container.
 
@@ -359,8 +361,9 @@ PRESITEN/
   .github/workflows/
     keep-alive.yml    # cron */10 (node direto no runner) + disparo opcional à Vercel
     docker-build.yml  # build da imagem (manual / paths)
-  vercel.json         # cron diário + maxDuration 60
-  Dockerfile          # mcr playwright + docker-entry.sh (HTTP core | SIM_BROWSER=1 → Chromium)
+  vercel.json         # cron diário + maxDuration 60 + framework null/outputDirectory public
+  docker/
+    Dockerfile        # mcr playwright + docker-entry.sh (HTTP core | SIM_BROWSER=1 → Chromium)
   docker-entry.sh     # escolhe modo HTTP vs Chromium no container
   docker-compose.yml
   package.json        # scripts: sim | sim:chat | browser | loop

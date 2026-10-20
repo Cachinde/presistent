@@ -1,6 +1,9 @@
 node_modules/
-.env
 .vercel/
 sim/state/
 *.log
 tsconfig.tsbuildinfo
+.env
+.env.local
+.env*.local
+!.env.example

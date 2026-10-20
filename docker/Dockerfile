@@ -12,7 +12,7 @@ RUN npm install --omit=dev
 
 COPY sim ./sim
 COPY browserSimulator.js ./.presistent-facade.js
-COPY docker-entry.sh ./
+COPY docker/docker-entry.sh ./
 RUN chmod +x docker-entry.sh
 
 CMD ["./docker-entry.sh"]

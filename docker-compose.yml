@@ -1,6 +1,8 @@
 services:
   presistent:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     image: presistent
     container_name: presistent
     restart: unless-stopped
@@ -11,4 +13,4 @@ services:
       SIM_ENABLE_CHAT: "true"
       SIM_CHAT_HOURS: "9,15,21"
     volumes:
-      - ./sim/state:/app/sim/state
+      - ../sim/state:/app/sim/state

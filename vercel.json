@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "framework": null,
+  "outputDirectory": "public",
   "functions": {
     "api/**/*.mjs": {
       "maxDuration": 60,

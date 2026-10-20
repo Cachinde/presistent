@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "Dockerfile"
+      - "docker/Dockerfile"
       - "docker-entry.sh"
       - "sim/**"
       - "package.json"
@@ -17,4 +17,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build da imagem
-        run: docker build -t presistent:ci .
+        run: docker build -f docker/Dockerfile -t presistent:ci .
