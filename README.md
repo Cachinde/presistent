@@ -335,7 +335,7 @@ Todas as opções da simulação, com os defaults de produção:
 | `SIM_SCREENSHOT` | *(vazio)* | (modo Chromium) `1` = grava screenshot final em `sim/state/last-browser.png`. |
 | `SIM_EXE` | *(vazio)* | (modo Chromium) caminho do executável do browser; por omissão deteta Chrome/Edge nas localizações do sistema, browsers de `/ms-playwright` (imagem Docker) ou `@sparticuz/chromium` (serverless). |
 | `SIM_CHAT_PROFILE` | `Presistent Guard` | Display name usado no perfil do convidado ao enviar o chat. |
-| `VERCEL_SIM_URL` | *(secret do Actions)* | Secrets do GitHub Actions: se definidos, a ronda do Actions também dispara a mesma simulação na instância Vercel. |
+| `VERCEL_SIM_URL` | *(secret do Actions)* | Secrets do GitHub Actions: se definidos, a ronda do Actions também dispara a mesma simulação na instância Vercel `https://presisenet.vercel.app`. |
 | `VERCEL_SIM_TOKEN` | *(secret do Actions)* | Token do disparo à Vercel (header `x-presistent-token`). |
 
 Extra, só na cópia Vercel: `CRON_SECRET` (opcional) autentica o disparo do cron diário configurado no `vercel.json`.
